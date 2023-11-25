@@ -1,0 +1,117 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+desc "Create a new identifier"
+lane :create_new_app do |options|
+  Spaceship::ConnectAPI.login
+
+  identifier = Spaceship::Portal.app.create!(bundle_id: options[:bundle_id], name: options[:name])
+  # List app service: https://github.com/fastlane/fastlane/blob/master/spaceship/docs/DeveloperPortal.md#app-services
+  identifier.update_service(Spaceship::Portal.app_service.push_notification.on)
+  app = Spaceship::ConnectAPI::App.create(name: options[:name],
+                                        version_string: "1.0", # initial version
+                                        sku: options[:sku],
+                                        primary_locale: "en_US",
+                                        bundle_id: options[:bundle_id],
+                                        platforms: ["IOS"],
+                                        company_name: "Kendrick")
+  UI.success("Create app successfully #{options[:bundle_id]} #{options[:name]}")
+  lane_context[:bundle_id] = options[:bundle_id]
+  generate_new_cert
+  sync_cert
+  beta
+  
+end
+
+desc "Generate new certificates"
+lane :generate_new_cert do
+  match(
+    type: "appstore",
+    app_identifier: lane_context[:bundle_id],
+    force_for_new_devices: true,
+    readonly: false
+  )
+end
+
+lane :second_lane do
+  # Access the variable from the lane_context
+  puts "Variable from the first lane: #{lane_context[:bundle_id]}"
+end
+
+lane :sync_cert do
+  sync_code_signing(
+    type: "appstore",
+    app_identifier: lane_context[:bundle_id],
+    force_for_new_devices: true,
+    readonly: true
+  )
+end
+
+lane :set_bundle_id do
+  # Your other lane steps go here
+
+  # Set provisional profile
+  gym(
+    scheme: "JokerApptest",
+    export_method: "app-store",
+    export_options: {
+      provisioningProfiles: {
+        lane_context[:bundle_id] => "User app beehive"
+      }
+    }
+  )
+
+  # Your other lane steps go here
+end
+
+
+  # ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"] = "dgsw-lmqx-hctv-zxqv"
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # puts "increment_build_number....."
+    # increment_build_number(xcodeproj: "JokerApptest.xcodeproj")
+
+    puts "sync_code_signing....."
+    sync_code_signing(
+      type: "appstore",
+      app_identifier: lane_context[:bundle_id],
+      force_for_new_devices: true,
+      readonly: true
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      code_sign_identity: 'Apple Distribution: Christopher Kendrick (PV997N5427)'
+    )
+
+    app_identifier = lane_context[:bundle_id]
+    match_type = 'app-store'
+    profile_path = ENV["sigh_#{app_identifier}_#{match_type}_profile-path"]
+    update_project_provisioning(
+      target_filter: 'JokerApptest',
+      profile: profile_path,
+    )
+
+    puts "build_app....."
+    build_app(workspace: "JokerApptest.xcworkspace", scheme: "JokerApptest")
+
+    puts "Uploading to Testflight....."
+    upload_to_testflight(
+        skip_waiting_for_build_processing: true,
+        apple_id: "6465692173"
+      )
+  end

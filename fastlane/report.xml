@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="fastlane.lanes">
+    
+    
+    
+      
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.00061">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="1: Switch to generate_new_cert lane" time="0.000596">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="2: match" time="11.575305">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="3: Switch to sync_cert lane" time="0.000464">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="4: sync_code_signing" time="1.711577">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="5: Switch to beta lane" time="0.000245">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="6: sync_code_signing" time="1.744344">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="7: update_code_signing_settings" time="0.101186">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="8: update_project_provisioning" time="126.566774">
+        
+      </testcase>
+    
+  </testsuite>
+</testsuites>
